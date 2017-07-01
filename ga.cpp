@@ -1,3 +1,5 @@
+// ga.cpp
+
 #include<bits/stdc++.h>
 
 using namespace std;
@@ -18,7 +20,7 @@ uniform_int_distribution<ull> distribution(0,inf);
 uniform_int_distribution<int> distbit(0,63);
 
 const float pi = 2 * acosf(0);
-const float eps = 1e-7;
+const float eps = 1e-7, eps2 = 1e-50;
 
 typedef union {
     ull code;
@@ -30,8 +32,6 @@ typedef union {
 
 vector<chromsome> gen[maxngen];
 vector<float> x[maxngen],y[maxngen],f[maxngen], p[maxngen];
-
-//#define gen(i,j) gen[(i)&1][j]
 
 float getf(float x, float y) {
     x = fabsf(x);
@@ -53,10 +53,7 @@ chromsome rand_ch() {
 
 pair<chromsome, chromsome> crossover(chromsome a, chromsome b) {
     chromsome ta, tb;
-    int cnt = 0;
     do {
-        //ull mask = distribution(generator);
-        //mask = (mask & a.code) ^ (mask & b.code);
         int i = distbit(generator), j = distbit(generator);
         if ( i > j) swap(i,j);
         ull mask = 1 << i;
@@ -64,20 +61,17 @@ pair<chromsome, chromsome> crossover(chromsome a, chromsome b) {
         mask = (mask & a.code) ^ (mask & b.code);
         ta.code = a.code ^ mask;
         tb.code = b.code ^ mask;
-        ++ cnt;
-    } while (cnt <= 100 && (!check(ta.v.x, ta.v.y) || !check(tb.v.x, tb.v.y)));
+    } while ((!check(ta.v.x, ta.v.y) || !check(tb.v.x, tb.v.y)));
     return {ta, tb};
 }
 
 chromsome mutate(chromsome a) {
     chromsome t;
-    int cnt = 0;
     do {
         int i = distbit(generator);
         ull mask = 1 << i;
         t.code = a.code ^ mask;
-        ++cnt;
-    } while (cnt <= 100 && !check(t.v.x, t.v.y));
+    } while (!check(t.v.x, t.v.y));
     return t;
 }
 
@@ -102,7 +96,7 @@ int main() {
             x[g].push_back(t.v.x);
             y[g].push_back(t.v.y);
             f[g].push_back(getf(t.v.x, t.v.y));
-            p[g].push_back(log(f[g].back()));
+            p[g].push_back(log(f[g].back() + eps2));
 
             if (f[g][i] < ans) {
                 ans = f[g][i];
@@ -129,8 +123,6 @@ int main() {
         for (int k = 0; k < ncrs / 2; ++ k) {
             int i, j;
             i = dist(generator); j = dist(generator);
-            //do {
-            //} while (i == j);
             auto pr = crossover( gen[g][i], gen[g][j] );
             gen[g + 1].push_back(pr.first);
             gen[g + 1].push_back(pr.second);
@@ -141,14 +133,6 @@ int main() {
         }
 
     }
-
-    /*
-    cout << inf << endl;
-    for (int i = 0; i < 9; ++ i) {
-        gen(0,i) = rand_ch();
-        cout << gen(0,i).v.x << " " << gen(0,i).v.y << endl;
-    }
-    */
 
     return 0;
 }
